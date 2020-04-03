@@ -6,7 +6,10 @@ const loginPage = (req, res) => res.render('login');
 
 const signupPage = (req, res) => res.render('signup');
 
-const logout = (req, res) => res.redirect('/');
+const logout = (req, res) => {
+  req.session.destroy();
+  res.redirect('/');
+};
 
 const login = (req, res) => {
   req.body.username = `${req.body.username}`;
@@ -20,6 +23,8 @@ const login = (req, res) => {
     if (err || !account) {
       return res.status(401).json({ error: 'Wrong username or password' });
     }
+
+    req.session.account = Account.AccountModel.toAPI(account);
 
     return res.json({ redirect: '/maker' });
   });
@@ -39,15 +44,18 @@ const signup = (req, res) => {
   }
 
   return Account.AccountModel.generateHash(req.body.pass, (salt, hash) => {
-    const data = {
+    const newAccount = new Account.AccountModel({
       username: req.body.username,
       salt,
       password: hash,
-    };
+    });
 
-    const savePromise = new Account.AccountModel(data).save();
+    const savePromise = newAccount.save();
 
-    savePromise.then(() => res.json({ redirect: '/maker' }));
+    savePromise.then(() => {
+      req.session.account = Account.AccountModel.toAPI(newAccount);
+      return res.json({ redirect: '/maker' });
+    });
 
     savePromise.catch((err) => {
       console.log(err);
