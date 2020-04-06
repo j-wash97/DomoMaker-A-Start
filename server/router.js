@@ -1,14 +1,13 @@
 const cont = require('./controllers');
+const mid = require('./middleware');
 
-const router = (app) => {
-  app.get('/login', cont.Account.loginPage);
-  app.post('/login', cont.Account.login);
-  app.get('/signup', cont.Account.signupPage);
-  app.post('/signup', cont.Account.signup);
-  app.get('/logout', cont.Account.logout);
-  app.get('/maker', cont.Domo.makerPage);
-  app.post('/maker', cont.Domo.maker);
-  app.get('/', cont.Account.loginPage);
+module.exports = (app) => {
+  app.get('/login', mid.requireSecure, mid.requireLogout, cont.Account.loginPage);
+  app.post('/login', mid.requireSecure, mid.requireLogout, cont.Account.login);
+  app.get('/signup', mid.requireSecure, mid.requireLogout, cont.Account.signupPage);
+  app.post('/signup', mid.requireSecure, mid.requireLogout, cont.Account.signup);
+  app.get('/logout', mid.requireLogin, cont.Account.logout);
+  app.get('/maker', mid.requireLogin, cont.Domo.makerPage);
+  app.post('/maker', mid.requireLogin, cont.Domo.maker);
+  app.get('/', mid.requireSecure, mid.requireLogout, cont.Account.loginPage);
 };
-
-module.exports = router;
